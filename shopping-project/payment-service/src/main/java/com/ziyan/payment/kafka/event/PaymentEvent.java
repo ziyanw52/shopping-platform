@@ -21,4 +21,5 @@ public class PaymentEvent {
     private BigDecimal amount;
     private String status;
     private String currency;
+    private String failureReason;
 }
