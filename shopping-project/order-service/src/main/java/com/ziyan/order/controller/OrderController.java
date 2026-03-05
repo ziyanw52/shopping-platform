@@ -53,4 +53,19 @@ public class OrderController {
     public OrderResponse completeOrder(@PathVariable Long id){
         return orderService.completeOrder(id);
     }
+
+    @PostMapping("/{orderId}/confirm")
+    public OrderResponse confirmOrder(@PathVariable Long orderId){
+        return orderService.confirmOrder(orderId);
+    }
+
+    @PostMapping("/{orderId}/payment-failed")
+    public OrderResponse markPaymentFailed(@PathVariable Long orderId){
+        return orderService.markPaymentFailed(orderId);
+    }
+
+    @PostMapping("/{orderId}/refund")
+    public OrderResponse refundOrder(@PathVariable Long orderId){
+        return orderService.refundOrder(orderId);
+    }
 }

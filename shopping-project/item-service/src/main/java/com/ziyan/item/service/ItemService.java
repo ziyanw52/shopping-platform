@@ -33,4 +33,23 @@ public class ItemService {
         item.setStock(item.getStock() - quantity);
         return itemRepository.save(item);
     }
+
+    public Item reserveItem(String id, Integer quantity) {
+        Item item = itemRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("Item not found: " + id)
+        );
+        if (item.getStock() < quantity) {
+            throw new RuntimeException("Not enough stock for item: " + id);
+        }
+        item.setStock(item.getStock() - quantity);
+        return itemRepository.save(item);
+    }
+
+    public Item restockItem(String id, Integer quantity) {
+        Item item = itemRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("Item not found: " + id)
+        );
+        item.setStock(item.getStock() + quantity);
+        return itemRepository.save(item);
+    }
 }

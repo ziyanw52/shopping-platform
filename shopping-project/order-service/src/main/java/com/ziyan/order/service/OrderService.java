@@ -119,4 +119,37 @@ public class OrderService {
 
         return convert(order);
     }
+
+    // Confirm order (payment successful)
+    public OrderResponse confirmOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.setStatus(OrderStatus.CONFIRMED);
+        orderRepository.save(order);
+
+        return convert(order);
+    }
+
+    // Mark order payment failed
+    public OrderResponse markPaymentFailed(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.setStatus(OrderStatus.PAYMENT_FAILED);
+        orderRepository.save(order);
+
+        return convert(order);
+    }
+
+    // Refund order
+    public OrderResponse refundOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.setStatus(OrderStatus.REFUNDED);
+        orderRepository.save(order);
+
+        return convert(order);
+    }
 }

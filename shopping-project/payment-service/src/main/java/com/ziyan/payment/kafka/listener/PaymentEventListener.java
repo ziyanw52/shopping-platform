@@ -1,7 +1,10 @@
 package com.ziyan.payment.kafka.listener;
 
+import com.ziyan.payment.client.ItemServiceClient;
+import com.ziyan.payment.client.OrderServiceClient;
 import com.ziyan.payment.kafka.event.PaymentEvent;
 import com.ziyan.payment.service.EmailService;
+import com.ziyan.payment.service.RetryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,6 +21,9 @@ import org.springframework.stereotype.Service;
 public class PaymentEventListener {
 
     private final EmailService emailService;
+    private final OrderServiceClient orderServiceClient;
+    private final ItemServiceClient itemServiceClient;
+    private final RetryService retryService;
 
     /**
      * Handle successful payments
@@ -39,8 +45,10 @@ public class PaymentEventListener {
             // Send success email to customer
             emailService.sendPaymentSuccessEmail(event.getOrderId(), event.getAmount());
             
-            // TODO: Update order status to CONFIRMED
-            // TODO: Notify order service
+            // Update order status to CONFIRMED
+            orderServiceClient.confirmOrder(event.getOrderId());
+            
+            // TODO: Send success notification (push notification, SMS, etc)
             
             log.info("✓ Successfully processed payment success event for Order: {}", event.getOrderId());
         } catch (Exception e) {
@@ -68,8 +76,11 @@ public class PaymentEventListener {
             // Send failure email with retry link
             emailService.sendPaymentFailureEmail(event.getOrderId(), event.getFailureReason());
             
-            // TODO: Update order status to FAILED
-            // TODO: Create retry task (retry after 5 minutes)
+            // Update order status to FAILED
+            orderServiceClient.markOrderPaymentFailed(event.getOrderId());
+            
+            // Schedule retry task (will retry after 5 minutes, then exponential backoff)
+            retryService.scheduleRetry(event.getPaymentId(), event.getFailureReason());
             
             log.info("✓ Successfully processed payment failed event for Order: {}", event.getOrderId());
         } catch (Exception e) {
@@ -97,8 +108,11 @@ public class PaymentEventListener {
             // Send refund confirmation email
             emailService.sendPaymentRefundEmail(event.getOrderId(), event.getAmount());
             
-            // TODO: Update order status to REFUNDED
-            // TODO: Add items back to inventory
+            // Update order status to REFUNDED
+            orderServiceClient.refundOrder(event.getOrderId());
+            
+            // TODO: Add items back to inventory (need item details from order service)
+            // itemServiceClient.restockItem(itemId, quantity);
             
             log.info("✓ Successfully processed payment refund event for Order: {}", event.getOrderId());
         } catch (Exception e) {

@@ -34,4 +34,16 @@ public class ItemController {
                             @RequestParam Integer quantity) {
         return itemService.deductStock(id, quantity);
     }
+
+    @PostMapping("/{id}/reserve")
+    public Item reserveItem(@PathVariable String id,
+                            @RequestParam Integer quantity) {
+        return itemService.reserveItem(id, quantity);
+    }
+
+    @PostMapping("/{id}/restock")
+    public Item restockItem(@PathVariable String id,
+                            @RequestParam Integer quantity) {
+        return itemService.restockItem(id, quantity);
+    }
 }
