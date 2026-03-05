@@ -2,6 +2,7 @@ package com.ziyan.order.controller;
 
 import com.ziyan.order.dto.*;
 import com.ziyan.order.service.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,26 +27,26 @@ public class OrderController {
         return orderService.getOrders();
     }
 
-    @GetMapping("/{id}")
-    public OrderResponse getOrder(@PathVariable Long id){
-        return orderService.getOrder(id);
+    @GetMapping("/{orderId}")
+    public OrderResponse getOrder(@PathVariable Long orderId){
+        return orderService.getOrder(orderId);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{orderId}")
     public OrderResponse updateOrder(
-            @PathVariable Long id,
-            @RequestBody UpdateOrderRequest request){
-        return orderService.updateOrder(id, request);
+            @PathVariable Long orderId,
+            @Valid @RequestBody UpdateOrderRequest request){
+        return orderService.updateOrder(orderId, request);
     }
 
-    @PostMapping("/{id}/cancel")
-    public OrderResponse cancelOrder(@PathVariable Long id){
-        return orderService.cancelOrder(id);
+    @PostMapping("/{orderId}/cancel")
+    public OrderResponse cancelOrder(@PathVariable Long orderId){
+        return orderService.cancelOrder(orderId);
     }
 
-    @PostMapping("/{id}/paid")
-    public OrderResponse markPaid(@PathVariable Long id){
-        return orderService.markPaid(id);
+    @PostMapping("/{orderId}/paid")
+    public OrderResponse markPaid(@PathVariable Long orderId){
+        return orderService.markPaid(orderId);
     }
 
     @PostMapping("/{id}/complete")

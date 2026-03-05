@@ -9,7 +9,8 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id")
+    private Long orderId;
 
     private Long userId;
 
@@ -30,8 +31,8 @@ public class Order {
         this.status = OrderStatus.CREATED;
     }
 
-    public Long getId() {
-        return id;
+    public Long getOrderId() {
+        return orderId;
     }
 
     public Long getUserId() {

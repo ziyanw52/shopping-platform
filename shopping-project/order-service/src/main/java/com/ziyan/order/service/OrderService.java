@@ -43,18 +43,18 @@ public class OrderService {
     }
 
     // Get order by id
-    public OrderResponse getOrder(Long id) {
+    public OrderResponse getOrder(Long orderId) {
 
-        Order order = orderRepository.findById(id)
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         return convert(order);
     }
 
     // Update order
-    public OrderResponse updateOrder(Long id, UpdateOrderRequest request) {
+    public OrderResponse updateOrder(Long orderId, UpdateOrderRequest request) {
 
-        Order order = orderRepository.findById(id)
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         order.setQuantity(request.getQuantity());
@@ -65,25 +65,26 @@ public class OrderService {
     }
 
     // Delete order
-    public void deleteOrder(Long id) {
-        orderRepository.deleteById(id);
+    public void deleteOrder(Long orderId) {
+        orderRepository.deleteById(orderId);
     }
 
     // Convert entity -> response
     private OrderResponse convert(Order order) {
 
         return new OrderResponse(
-                order.getId(),
+                order.getOrderId(),
                 order.getUserId(),
                 order.getItemId(),
-                order.getQuantity()
+                order.getQuantity(),
+                order.getStatus()
         );
     }
 
     // Cancel order
-    public OrderResponse cancelOrder(Long id) {
+    public OrderResponse cancelOrder(Long orderId) {
 
-        Order order = orderRepository.findById(id)
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         order.setStatus(OrderStatus.CANCELLED);
@@ -94,9 +95,9 @@ public class OrderService {
     }
 
     // Mark order paid
-    public OrderResponse markPaid(Long id) {
+    public OrderResponse markPaid(Long orderId) {
 
-        Order order = orderRepository.findById(id)
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         order.setStatus(OrderStatus.PAID);
