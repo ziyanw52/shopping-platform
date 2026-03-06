@@ -68,4 +68,52 @@ public class OrderController {
     public OrderResponse refundOrder(@PathVariable Long orderId){
         return orderService.refundOrder(orderId);
     }
+
+    // ============= CART ENDPOINTS =============
+
+    @GetMapping("/carts/{userId}")
+    public CartResponse getCart(@PathVariable Long userId) {
+        return orderService.getCart(userId);
+    }
+
+    @PostMapping("/carts/{userId}/items")
+    public CartResponse addItemToCart(
+            @PathVariable Long userId,
+            @RequestBody AddToCartRequest request) {
+        return orderService.addItemToCart(userId, request);
+    }
+
+    @DeleteMapping("/carts/{userId}/items/{cartItemId}")
+    public CartResponse removeItemFromCart(
+            @PathVariable Long userId,
+            @PathVariable Long cartItemId) {
+        return orderService.removeItemFromCart(userId, cartItemId);
+    }
+
+    @PutMapping("/carts/{userId}/items")
+    public CartResponse updateItemQuantity(
+            @PathVariable Long userId,
+            @RequestBody UpdateCartItemRequest request) {
+        return orderService.updateItemQuantity(userId, request);
+    }
+
+    @GetMapping("/carts/{userId}/total")
+    public Double getCartTotal(@PathVariable Long userId) {
+        return orderService.getCartTotal(userId);
+    }
+
+    @GetMapping("/carts/{userId}/count")
+    public Integer getCartItemCount(@PathVariable Long userId) {
+        return orderService.getCartItemCount(userId);
+    }
+
+    @DeleteMapping("/carts/{userId}/clear")
+    public void clearCart(@PathVariable Long userId) {
+        orderService.clearCart(userId);
+    }
+
+    @PostMapping("/carts/{userId}/checkout")
+    public OrderResponse checkout(@PathVariable Long userId) {
+        return orderService.checkout(userId);
+    }
 }

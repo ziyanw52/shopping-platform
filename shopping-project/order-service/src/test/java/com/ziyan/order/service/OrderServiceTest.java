@@ -1,9 +1,12 @@
 package com.ziyan.order.service;
 
-import com.ziyan.order.dto.CreateOrderRequest;
-import com.ziyan.order.dto.UpdateOrderRequest;
+import com.ziyan.order.dto.*;
+import com.ziyan.order.entity.Cart;
+import com.ziyan.order.entity.CartItem;
 import com.ziyan.order.entity.Order;
 import com.ziyan.order.repository.OrderRepository;
+import com.ziyan.order.repository.CartRepository;
+import com.ziyan.order.repository.CartItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +33,12 @@ class OrderServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private CartRepository cartRepository;
+
+    @Mock
+    private CartItemRepository cartItemRepository;
 
     @InjectMocks
     private OrderService orderService;
@@ -528,5 +537,335 @@ class OrderServiceTest {
         }
 
         verify(orderRepository, times(5)).save(any(Order.class));
+    }
+
+    // ============= CART TESTS =============
+
+    @Test
+    void testGetOrCreateCart_NewCart() {
+        // Arrange
+        Long userId = 1L;
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.empty());
+        
+        Cart newCart = new Cart(userId);
+        newCart.setCartId(1L);
+        when(cartRepository.save(any(Cart.class))).thenReturn(newCart);
+
+        // Act
+        CartResponse response = orderService.getOrCreateCart(userId);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(userId, response.getUserId());
+        assertEquals(0, response.getTotalQuantity());
+        verify(cartRepository, times(1)).findByUserId(userId);
+        verify(cartRepository, times(1)).save(any(Cart.class));
+    }
+
+    @Test
+    void testGetOrCreateCart_ExistingCart() {
+        // Arrange
+        Long userId = 1L;
+        Cart existingCart = new Cart(userId);
+        existingCart.setCartId(1L);
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(existingCart));
+
+        // Act
+        CartResponse response = orderService.getOrCreateCart(userId);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(userId, response.getUserId());
+        verify(cartRepository, times(1)).findByUserId(userId);
+        verify(cartRepository, times(0)).save(any(Cart.class));
+    }
+
+    @Test
+    void testGetCart_Success() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+
+        // Act
+        CartResponse response = orderService.getCart(userId);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(userId, response.getUserId());
+        assertEquals(1L, response.getCartId());
+    }
+
+    @Test
+    void testGetCart_NotFound() {
+        // Arrange
+        Long userId = 1L;
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> orderService.getCart(userId));
+    }
+
+    @Test
+    void testAddItemToCart_NewItem() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        cart.setItems(Collections.emptyList());
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+        when(cartRepository.save(any(Cart.class))).thenReturn(cart);
+
+        AddToCartRequest request = new AddToCartRequest("ITEM1", "Test Item", 99.99, 2);
+
+        // Act
+        CartResponse response = orderService.addItemToCart(userId, request);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(userId, response.getUserId());
+        verify(cartRepository, times(1)).findByUserId(userId);
+        verify(cartRepository, times(1)).save(any(Cart.class));
+    }
+
+    @Test
+    void testAddItemToCart_ExistingItem() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        
+        CartItem existingItem = new CartItem("ITEM1", "Test Item", 99.99, 2);
+        existingItem.setCartItemId(1L);
+        cart.setItems(Arrays.asList(existingItem));
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+        when(cartRepository.save(any(Cart.class))).thenReturn(cart);
+
+        AddToCartRequest request = new AddToCartRequest("ITEM1", "Test Item", 99.99, 3);
+
+        // Act
+        CartResponse response = orderService.addItemToCart(userId, request);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(5, existingItem.getQuantity()); // 2 + 3
+        verify(cartRepository, times(1)).save(any(Cart.class));
+    }
+
+    @Test
+    void testRemoveItemFromCart_Success() {
+        // Arrange
+        Long userId = 1L;
+        Long cartItemId = 1L;
+        
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        
+        CartItem item = new CartItem("ITEM1", "Test Item", 99.99, 2);
+        item.setCartItemId(cartItemId);
+        cart.setItems(Arrays.asList(item));
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+        when(cartRepository.save(any(Cart.class))).thenReturn(cart);
+
+        // Act
+        CartResponse response = orderService.removeItemFromCart(userId, cartItemId);
+
+        // Assert
+        assertNotNull(response);
+        verify(cartRepository, times(1)).save(any(Cart.class));
+    }
+
+    @Test
+    void testRemoveItemFromCart_ItemNotFound() {
+        // Arrange
+        Long userId = 1L;
+        Long cartItemId = 999L;
+        
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        cart.setItems(Collections.emptyList());
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> orderService.removeItemFromCart(userId, cartItemId));
+    }
+
+    @Test
+    void testUpdateItemQuantity_Success() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        
+        CartItem item = new CartItem("ITEM1", "Test Item", 99.99, 2);
+        item.setCartItemId(1L);
+        cart.setItems(Arrays.asList(item));
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+        when(cartRepository.save(any(Cart.class))).thenReturn(cart);
+
+        UpdateCartItemRequest request = new UpdateCartItemRequest(1L, 5);
+
+        // Act
+        CartResponse response = orderService.updateItemQuantity(userId, request);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(5, item.getQuantity());
+        verify(cartRepository, times(1)).save(any(Cart.class));
+    }
+
+    @Test
+    void testUpdateItemQuantity_InvalidQuantity() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        
+        CartItem item = new CartItem("ITEM1", "Test Item", 99.99, 2);
+        item.setCartItemId(1L);
+        cart.setItems(Arrays.asList(item));
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+
+        UpdateCartItemRequest request = new UpdateCartItemRequest(1L, 0);
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> orderService.updateItemQuantity(userId, request));
+    }
+
+    @Test
+    void testUpdateItemQuantity_ItemNotFound() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        cart.setItems(Collections.emptyList());
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+
+        UpdateCartItemRequest request = new UpdateCartItemRequest(999L, 5);
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> orderService.updateItemQuantity(userId, request));
+    }
+
+    @Test
+    void testClearCart() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        
+        CartItem item = new CartItem("ITEM1", "Test Item", 99.99, 2);
+        cart.setItems(Arrays.asList(item));
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+        when(cartRepository.save(any(Cart.class))).thenReturn(cart);
+
+        // Act
+        orderService.clearCart(userId);
+
+        // Assert
+        verify(cartRepository, times(1)).save(any(Cart.class));
+    }
+
+    @Test
+    void testGetCartTotal() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        
+        CartItem item1 = new CartItem("ITEM1", "Test Item 1", 100.00, 2);
+        CartItem item2 = new CartItem("ITEM2", "Test Item 2", 50.00, 1);
+        cart.setItems(Arrays.asList(item1, item2));
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+
+        // Act
+        Double total = orderService.getCartTotal(userId);
+
+        // Assert
+        assertEquals(250.00, total); // (100*2) + (50*1)
+    }
+
+    @Test
+    void testGetCartItemCount() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        
+        CartItem item1 = new CartItem("ITEM1", "Test Item 1", 100.00, 2);
+        CartItem item2 = new CartItem("ITEM2", "Test Item 2", 50.00, 3);
+        cart.setItems(Arrays.asList(item1, item2));
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+
+        // Act
+        Integer count = orderService.getCartItemCount(userId);
+
+        // Assert
+        assertEquals(5, count); // 2 + 3
+    }
+
+    @Test
+    void testCheckout_Success() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        
+        CartItem item = new CartItem("ITEM1", "Test Item", 99.99, 2);
+        item.setCartItemId(1L);
+        cart.setItems(Arrays.asList(item));
+        
+        Order createdOrder = new Order();
+        createdOrder.setId(100L);
+        createdOrder.setUserId(userId);
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+        when(orderRepository.save(any(Order.class))).thenReturn(createdOrder);
+        when(cartRepository.save(any(Cart.class))).thenReturn(cart);
+
+        // Act
+        OrderResponse response = orderService.checkout(userId);
+
+        // Assert
+        assertNotNull(response);
+        verify(orderRepository, times(1)).save(any(Order.class));
+        verify(cartRepository, times(1)).save(any(Cart.class));
+    }
+
+    @Test
+    void testCheckout_EmptyCart() {
+        // Arrange
+        Long userId = 1L;
+        Cart cart = new Cart(userId);
+        cart.setCartId(1L);
+        cart.setItems(Collections.emptyList());
+        
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> orderService.checkout(userId));
+    }
+
+    @Test
+    void testCheckout_CartNotFound() {
+        // Arrange
+        Long userId = 1L;
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> orderService.checkout(userId));
     }
 }
