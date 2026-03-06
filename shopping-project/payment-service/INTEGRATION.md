@@ -222,6 +222,5 @@ CANCELLED          // Order cancelled
 - [ ] Real SMTP email service (replace MockEmailService)
 - [ ] Replace in-memory retry cache with database
 - [ ] Add payment analytics & reporting
-- [ ] Implement real Stripe integration
 - [ ] Add payment webhooks for 3rd party gateways
 - [ ] Circuit breaker for service failures

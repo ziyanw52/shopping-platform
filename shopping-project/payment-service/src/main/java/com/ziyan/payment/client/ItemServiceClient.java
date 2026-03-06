@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class ItemServiceClient {
 
-    @Value("${item-service.url:http://localhost:8083}")
+    @Value("${item-service.url:http://localhost:8082}")
     private String itemServiceUrl;
 
     private final RestTemplate restTemplate;
@@ -24,7 +24,7 @@ public class ItemServiceClient {
      * Add items back to inventory on refund
      * Expected endpoint: POST /items/{itemId}/restock?quantity=X
      */
-    public void restockItem(Long itemId, Integer quantity) {
+    public void restockItem(String itemId, Integer quantity) {
         try {
             String url = itemServiceUrl + "/items/" + itemId + "/restock?quantity=" + quantity;
             restTemplate.postForObject(url, null, Void.class);
@@ -38,7 +38,7 @@ public class ItemServiceClient {
      * Reduce inventory on successful payment
      * Expected endpoint: POST /items/{itemId}/reserve?quantity=X
      */
-    public void reserveItem(Long itemId, Integer quantity) {
+    public void reserveItem(String itemId, Integer quantity) {
         try {
             String url = itemServiceUrl + "/items/" + itemId + "/reserve?quantity=" + quantity;
             restTemplate.postForObject(url, null, Void.class);

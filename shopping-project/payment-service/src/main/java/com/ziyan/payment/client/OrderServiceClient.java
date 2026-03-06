@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class OrderServiceClient {
 
-    @Value("${order-service.url:http://localhost:8082}")
+    @Value("${order-service.url:http://localhost:8083}")
     private String orderServiceUrl;
 
     private final RestTemplate restTemplate;
@@ -56,6 +56,21 @@ public class OrderServiceClient {
             log.info("✓ Order {} status updated to REFUNDED", orderId);
         } catch (Exception e) {
             log.error("✗ Failed to refund order {}: {}", orderId, e.getMessage());
+        }
+    }
+
+    /**
+     * Get order details (for fetching items to restock on refund)
+     */
+    public OrderDetailDto getOrderDetails(Long orderId) {
+        try {
+            String url = orderServiceUrl + "/orders/" + orderId;
+            OrderDetailDto order = restTemplate.getForObject(url, OrderDetailDto.class);
+            log.info("✓ Retrieved order details for order: {}", orderId);
+            return order;
+        } catch (Exception e) {
+            log.error("✗ Failed to get order details {}: {}", orderId, e.getMessage());
+            return null;
         }
     }
 }

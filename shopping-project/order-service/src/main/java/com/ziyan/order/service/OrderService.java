@@ -100,7 +100,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        order.setStatus(OrderStatus.PAID);
+        order.setStatus(OrderStatus.CONFIRMED);
 
         orderRepository.save(order);
 

@@ -48,6 +48,30 @@ public class PaymentEventListener {
             // Update order status to CONFIRMED
             orderServiceClient.confirmOrder(event.getOrderId());
             
+            // Deduct inventory (reserve items)
+            com.ziyan.payment.client.OrderDetailDto orderDetails = 
+                orderServiceClient.getOrderDetails(event.getOrderId());
+            
+            if (orderDetails != null && orderDetails.getItemId() != null) {
+                try {
+                    itemServiceClient.reserveItem(
+                        orderDetails.getItemId(), 
+                        orderDetails.getQuantity()
+                    );
+                    log.info("✓ Reserved {} units of item {} for order", 
+                        orderDetails.getQuantity(), 
+                        orderDetails.getItemId());
+                } catch (Exception e) {
+                    log.error("✗ Failed to reserve inventory for order {}: {}", 
+                        event.getOrderId(), e.getMessage());
+                    // Don't fail the whole process if inventory deduction fails
+                    // In real scenario, might want to mark order for manual review
+                }
+            } else {
+                log.warn("⚠️ Could not retrieve order details for inventory deduction - Order: {}", 
+                    event.getOrderId());
+            }
+            
             // TODO: Send success notification (push notification, SMS, etc)
             
             log.info("✓ Successfully processed payment success event for Order: {}", event.getOrderId());
@@ -111,8 +135,22 @@ public class PaymentEventListener {
             // Update order status to REFUNDED
             orderServiceClient.refundOrder(event.getOrderId());
             
-            // TODO: Add items back to inventory (need item details from order service)
-            // itemServiceClient.restockItem(itemId, quantity);
+            // Add items back to inventory
+            com.ziyan.payment.client.OrderDetailDto orderDetails = 
+                orderServiceClient.getOrderDetails(event.getOrderId());
+            
+            if (orderDetails != null && orderDetails.getItemId() != null) {
+                itemServiceClient.restockItem(
+                    orderDetails.getItemId(), 
+                    orderDetails.getQuantity()
+                );
+                log.info("✓ Restocked {} units of item {} for refunded order", 
+                    orderDetails.getQuantity(), 
+                    orderDetails.getItemId());
+            } else {
+                log.warn("⚠️ Could not retrieve order details for restocking - Order: {}", 
+                    event.getOrderId());
+            }
             
             log.info("✓ Successfully processed payment refund event for Order: {}", event.getOrderId());
         } catch (Exception e) {
