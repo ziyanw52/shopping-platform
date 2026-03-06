@@ -3,12 +3,17 @@ package com.ziyan.account.service;
 import com.ziyan.account.dto.AccountResponse;
 import com.ziyan.account.dto.CreateAccountRequest;
 import com.ziyan.account.dto.UpdateAccountRequest;
+import com.ziyan.account.entity.Address;
+import com.ziyan.account.entity.PaymentMethod;
 import com.ziyan.account.entity.User;
+import com.ziyan.account.repository.AddressRepository;
+import com.ziyan.account.repository.PaymentMethodRepository;
 import com.ziyan.account.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -18,8 +23,15 @@ public class AccountService {
     private UserRepository userRepository;
 
     @Autowired
+    private AddressRepository addressRepository;
+
+    @Autowired
+    private PaymentMethodRepository paymentMethodRepository;
+
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Transactional
     public AccountResponse createAccount(CreateAccountRequest request) {
         // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -40,7 +52,39 @@ public class AccountService {
         User savedUser = userRepository.save(user);
         log.info("Account created for user: {}", savedUser.getUsername());
 
-        return convertToResponse(savedUser);
+        // Add addresses if provided
+        if (request.getAddresses() != null && !request.getAddresses().isEmpty()) {
+            request.getAddresses().forEach(addressDto -> {
+                Address address = new Address();
+                address.setUser(savedUser);
+                address.setType(Address.AddressType.valueOf(addressDto.getType().toUpperCase()));
+                address.setStreet(addressDto.getStreet());
+                address.setCity(addressDto.getCity());
+                address.setState(addressDto.getState());
+                address.setPostalCode(addressDto.getPostalCode());
+                address.setCountry(addressDto.getCountry());
+                savedUser.getAddresses().add(address);
+            });
+        }
+
+        // Add payment methods if provided
+        if (request.getPaymentMethods() != null && !request.getPaymentMethods().isEmpty()) {
+            request.getPaymentMethods().forEach(pmDto -> {
+                PaymentMethod pm = new PaymentMethod();
+                pm.setUser(savedUser);
+                pm.setMethodType(pmDto.getMethodType());
+                pm.setCardNumber(pmDto.getCardNumber());
+                pm.setLastFour(pmDto.getLastFour());
+                pm.setExpiryMonth(pmDto.getExpiryMonth());
+                pm.setExpiryYear(pmDto.getExpiryYear());
+                pm.setIsDefault(pmDto.getIsDefault() != null ? pmDto.getIsDefault() : false);
+                savedUser.getPaymentMethods().add(pm);
+            });
+        }
+
+        // Save user with all related entities via cascade
+        User finalUser = userRepository.save(savedUser);
+        return convertToResponse(finalUser);
     }
 
     public AccountResponse getAccount(Long userId) {
@@ -50,6 +94,7 @@ public class AccountService {
         return convertToResponse(user);
     }
 
+    @Transactional
     public AccountResponse updateAccount(Long userId, UpdateAccountRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
@@ -67,10 +112,50 @@ public class AccountService {
         user.setEmail(request.getEmail());
         user.setUsername(request.getUsername());
 
+        // Update addresses if provided
+        if (request.getAddresses() != null && !request.getAddresses().isEmpty()) {
+            // Clear existing addresses
+            addressRepository.deleteAll(user.getAddresses());
+            
+            // Add new addresses
+            request.getAddresses().forEach(addressDto -> {
+                Address address = new Address();
+                address.setUser(user);
+                address.setType(Address.AddressType.valueOf(addressDto.getType().toUpperCase()));
+                address.setStreet(addressDto.getStreet());
+                address.setCity(addressDto.getCity());
+                address.setState(addressDto.getState());
+                address.setPostalCode(addressDto.getPostalCode());
+                address.setCountry(addressDto.getCountry());
+                addressRepository.save(address);
+            });
+        }
+
+        // Update payment methods if provided
+        if (request.getPaymentMethods() != null && !request.getPaymentMethods().isEmpty()) {
+            // Clear existing payment methods
+            paymentMethodRepository.deleteAll(user.getPaymentMethods());
+            
+            // Add new payment methods
+            request.getPaymentMethods().forEach(pmDto -> {
+                PaymentMethod pm = new PaymentMethod();
+                pm.setUser(user);
+                pm.setMethodType(pmDto.getMethodType());
+                pm.setCardNumber(pmDto.getCardNumber());
+                pm.setLastFour(pmDto.getLastFour());
+                pm.setExpiryMonth(pmDto.getExpiryMonth());
+                pm.setExpiryYear(pmDto.getExpiryYear());
+                pm.setIsDefault(pmDto.getIsDefault() != null ? pmDto.getIsDefault() : false);
+                paymentMethodRepository.save(pm);
+            });
+        }
+
         User updatedUser = userRepository.save(user);
         log.info("Account updated for user: {}", updatedUser.getUsername());
 
-        return convertToResponse(updatedUser);
+        // Refresh user with latest data
+        User refreshedUser = userRepository.findById(updatedUser.getId()).orElse(updatedUser);
+        return convertToResponse(refreshedUser);
     }
 
     private AccountResponse convertToResponse(User user) {
@@ -85,3 +170,4 @@ public class AccountService {
         return response;
     }
 }
+
