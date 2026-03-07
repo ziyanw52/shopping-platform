@@ -126,7 +126,7 @@ COMMUNICATION:
   • Calls Item Service (HTTP/Feign)
   • Publishes to Kafka (Events)
 
-- Kafka -> 可能产生重复信息
+- Kafka -> may have duplicates (at-least-one)
 idempotency：Cassandra use unique Request ID （request_id = PRIMARY KEY）
 
 ```
