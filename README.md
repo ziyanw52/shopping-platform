@@ -77,7 +77,7 @@ User → Auth Service (REST API)
     Return JWT Token
 No communication with other services. It's independent.
 
-#### ACCOUNT SERVICE (8081)
+#### Service 2: ACCOUNT SERVICE (8081)
 INPUT: User profile, addresses, payment methods
 OUTPUT: Account details
 COMMUNICATION: None (standalone)
