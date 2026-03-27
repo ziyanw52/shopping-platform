@@ -20,4 +20,9 @@ public interface RetryService {
      * Get retry count for a payment
      */
     Integer getRetryCount(String paymentId);
+
+    /**
+     * Cleanup old retry entries
+     */
+    void cleanupOldRetries();
 }

@@ -1,0 +1,77 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+a { color: #2563eb; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Nav */
+.navbar { background: #1e293b; color: white; padding: 0.8rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.navbar .logo { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: .5rem; }
+.navbar nav { display: flex; gap: 1.2rem; align-items: center; }
+.navbar nav a { color: #cbd5e1; font-weight: 500; transition: color .2s; }
+.navbar nav a:hover, .navbar nav a.active { color: white; text-decoration: none; }
+.navbar .btn-logout { background: #ef4444; color: white; border: none; padding: .4rem .9rem; border-radius: 6px; cursor: pointer; font-size: .85rem; }
+
+/* Layout */
+.container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+.page-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 1.2rem; }
+
+/* Cards */
+.card { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; transition: transform .2s, box-shadow .2s; }
+.card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+.card img { width: 100%; height: 200px; object-fit: cover; background: #e2e8f0; }
+.card-body { padding: 1rem; }
+.card-body h3 { font-size: 1rem; margin-bottom: .4rem; }
+.card-body .price { font-size: 1.2rem; font-weight: 700; color: #16a34a; }
+.card-body .stock { font-size: .8rem; color: #94a3b8; }
+
+/* Grid */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.2rem; }
+
+/* Buttons */
+.btn { display: inline-block; padding: .55rem 1.2rem; border-radius: 8px; border: none; font-size: .9rem; font-weight: 600; cursor: pointer; transition: background .2s; }
+.btn-primary { background: #2563eb; color: white; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-success { background: #16a34a; color: white; }
+.btn-success:hover { background: #15803d; }
+.btn-danger { background: #ef4444; color: white; }
+.btn-danger:hover { background: #dc2626; }
+.btn-sm { padding: .35rem .8rem; font-size: .8rem; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Forms */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: .3rem; font-weight: 600; font-size: .85rem; }
+.form-group input, .form-group select { width: 100%; padding: .55rem .8rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: .9rem; }
+.form-card { background: white; border-radius: 12px; padding: 2rem; max-width: 420px; margin: 3rem auto; box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+.form-card h2 { text-align: center; margin-bottom: 1.5rem; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+th, td { text-align: left; padding: .7rem 1rem; border-bottom: 1px solid #e5e7eb; }
+th { background: #f8fafc; font-size: .8rem; text-transform: uppercase; color: #64748b; }
+
+/* Badge */
+.badge { display: inline-block; padding: .2rem .6rem; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+.badge-green { background: #dcfce7; color: #16a34a; }
+.badge-yellow { background: #fef9c3; color: #a16207; }
+.badge-red { background: #fee2e2; color: #dc2626; }
+.badge-blue { background: #dbeafe; color: #2563eb; }
+.badge-gray { background: #f1f5f9; color: #64748b; }
+
+/* Alert */
+.alert { padding: .8rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
+.alert-error { background: #fee2e2; color: #dc2626; }
+.alert-success { background: #dcfce7; color: #16a34a; }
+
+/* Hero */
+.hero { text-align: center; padding: 3rem 1rem; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; border-radius: 16px; margin-bottom: 2rem; }
+.hero h1 { font-size: 2.4rem; margin-bottom: .6rem; }
+.hero p { font-size: 1.1rem; color: #94a3b8; margin-bottom: 1.5rem; }
+
+/* Misc */
+.text-center { text-align: center; }
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.empty-state { text-align: center; padding: 3rem; color: #94a3b8; }
+.empty-state span { font-size: 3rem; display: block; margin-bottom: .5rem; }

@@ -9,11 +9,13 @@ import com.ziyan.order.repository.OrderRepository;
 import com.ziyan.order.repository.CartRepository;
 import com.ziyan.order.repository.CartItemRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -320,3 +322,4 @@ public class OrderService {
                 .totalQuantity(cart.getTotalQuantity())
                 .build();
     }
+}

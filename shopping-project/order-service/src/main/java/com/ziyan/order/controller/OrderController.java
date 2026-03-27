@@ -73,7 +73,7 @@ public class OrderController {
 
     @GetMapping("/carts/{userId}")
     public CartResponse getCart(@PathVariable Long userId) {
-        return orderService.getCart(userId);
+        return orderService.getOrCreateCart(userId);
     }
 
     @PostMapping("/carts/{userId}/items")

@@ -9,7 +9,6 @@ import com.ziyan.payment.model.Payment;
 import com.ziyan.payment.model.PaymentKey;
 import com.ziyan.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,7 +19,6 @@ import java.util.UUID;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
     private final PaymentGateway paymentGateway;
 
     /**
@@ -54,22 +52,8 @@ public class PaymentService {
             // Process payment using injected gateway (mock or real)
             paymentGateway.processPayment(payment);
             payment.setStatus(PaymentStatus.SUCCESS);
-            
-            // Publish success event
-            kafkaTemplate.send("payment.success", createPaymentEvent(payment));
         } catch (PaymentException e) {
             payment.setStatus(PaymentStatus.FAILED);
-            
-            // Publish failure event with reason
-            String failureEvent = String.format(
-                "{\"paymentId\":\"%s\",\"orderId\":%d,\"amount\":%.2f,\"status\":\"FAILED\",\"currency\":\"%s\",\"error\":\"%s\"}",
-                payment.getKey().getPaymentId(),
-                payment.getOrderId(),
-                payment.getAmount(),
-                payment.getCurrency(),
-                e.getMessage()
-            );
-            kafkaTemplate.send("payment.failed", failureEvent);
         }
 
         paymentRepository.save(payment);
@@ -116,9 +100,6 @@ public class PaymentService {
         payment.setUpdatedAt(LocalDateTime.now());
 
         paymentRepository.save(payment);
-        
-        // Publish refund event
-        kafkaTemplate.send("payment.refunded", createPaymentEvent(payment));
 
         return convertToResponse(payment);
     }
@@ -138,19 +119,5 @@ public class PaymentService {
                 .createdAt(payment.getCreatedAt())
                 .updatedAt(payment.getUpdatedAt())
                 .build();
-    }
-
-    /**
-     * Create Kafka event message
-     */
-    private String createPaymentEvent(Payment payment) {
-        return String.format(
-            "{\"paymentId\":\"%s\",\"orderId\":%d,\"amount\":%.2f,\"status\":\"%s\",\"currency\":\"%s\"}",
-            payment.getKey().getPaymentId(),
-            payment.getOrderId(),
-            payment.getAmount(),
-            payment.getStatus(),
-            payment.getCurrency()
-        );
     }
 }
