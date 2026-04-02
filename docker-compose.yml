@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Databases
   mysql:
@@ -38,6 +36,8 @@ services:
       - "9042:9042"
     environment:
       CASSANDRA_CLUSTER_NAME: "Shopping Platform Cluster"
+      MAX_HEAP_SIZE: "512M"
+      HEAP_NEWSIZE: "128M"
     healthcheck:
       test: ["CMD", "cqlsh", "-e", "describe cluster"]
       interval: 15s
@@ -79,18 +79,19 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     volumes:
       - kafka_data:/var/lib/kafka/data
 
   # Microservices
   account-service:
     build:
-      context: ./shopping-project/account-service
-      dockerfile: Dockerfile
+      context: ./shopping-project
+      dockerfile: account-service/Dockerfile
     container_name: account-service
     ports:
       - "8081:8081"
@@ -98,9 +99,10 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/account_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/account_db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s
@@ -109,8 +111,8 @@ services:
 
   item-service:
     build:
-      context: ./shopping-project/item-service
-      dockerfile: Dockerfile
+      context: ./shopping-project
+      dockerfile: item-service/Dockerfile
     container_name: item-service
     ports:
       - "8082:8082"
@@ -127,8 +129,8 @@ services:
 
   order-service:
     build:
-      context: ./shopping-project/order-service
-      dockerfile: Dockerfile
+      context: ./shopping-project
+      dockerfile: order-service/Dockerfile
     container_name: order-service
     ports:
       - "8083:8083"
@@ -136,9 +138,10 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/order_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/order_db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 10s
@@ -147,8 +150,8 @@ services:
 
   payment-service:
     build:
-      context: ./shopping-project/payment-service
-      dockerfile: Dockerfile
+      context: ./shopping-project
+      dockerfile: payment-service/Dockerfile
     container_name: payment-service
     ports:
       - "8084:8084"
@@ -167,6 +170,46 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  auth-service:
+    build:
+      context: ./shopping-project
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/auth_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost
+    depends_on:
+      - auth-service
+      - account-service
+      - item-service
+      - order-service
+      - payment-service
 
 volumes:
   mysql_data:

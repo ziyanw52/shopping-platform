@@ -7,6 +7,9 @@ import java.util.List;
 public class UpdateAccountRequest {
     private String email;
     private String username;
+    private String firstName;
+    private String lastName;
+    private String phone;
     private List<AddressDto> addresses;
     private List<PaymentMethodDto> paymentMethods;
 }

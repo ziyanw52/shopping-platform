@@ -11,6 +11,9 @@ public class AccountResponse {
     private Long id;
     private String username;
     private String email;
+    private String firstName;
+    private String lastName;
+    private String phone;
     private List<Address> addresses;
     private List<PaymentMethod> paymentMethods;
     private LocalDateTime createdAt;

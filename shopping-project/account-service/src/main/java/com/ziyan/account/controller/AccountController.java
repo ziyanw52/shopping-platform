@@ -55,4 +55,60 @@ public class AccountController {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
     }
+
+    @PostMapping("/{id}/addresses")
+    public ResponseEntity<AccountResponse> addAddress(
+            @PathVariable Long id,
+            @RequestBody com.ziyan.account.entity.Address address) {
+        try {
+            log.info("Adding address for account: {}", id);
+            AccountResponse response = accountService.addAddress(id, address);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            log.warn("Address creation failed: {}", e.getMessage());
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("/{id}/addresses/{addressId}")
+    public ResponseEntity<Void> deleteAddress(
+            @PathVariable Long id,
+            @PathVariable Long addressId) {
+        try {
+            log.info("Deleting address {} for account: {}", addressId, id);
+            accountService.deleteAddress(id, addressId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (IllegalArgumentException e) {
+            log.warn("Address deletion failed: {}", e.getMessage());
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/{id}/payment-methods")
+    public ResponseEntity<AccountResponse> addPaymentMethod(
+            @PathVariable Long id,
+            @RequestBody com.ziyan.account.entity.PaymentMethod paymentMethod) {
+        try {
+            log.info("Adding payment method for account: {}", id);
+            AccountResponse response = accountService.addPaymentMethod(id, paymentMethod);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            log.warn("Payment method creation failed: {}", e.getMessage());
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("/{id}/payment-methods/{paymentMethodId}")
+    public ResponseEntity<Void> deletePaymentMethod(
+            @PathVariable Long id,
+            @PathVariable Long paymentMethodId) {
+        try {
+            log.info("Deleting payment method {} for account: {}", paymentMethodId, id);
+            accountService.deletePaymentMethod(id, paymentMethodId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (IllegalArgumentException e) {
+            log.warn("Payment method deletion failed: {}", e.getMessage());
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 }

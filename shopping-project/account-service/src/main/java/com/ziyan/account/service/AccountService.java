@@ -11,7 +11,6 @@ import com.ziyan.account.repository.PaymentMethodRepository;
 import com.ziyan.account.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +26,6 @@ public class AccountService {
 
     @Autowired
     private PaymentMethodRepository paymentMethodRepository;
-
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
 
     @Transactional
     public AccountResponse createAccount(CreateAccountRequest request) {
@@ -47,7 +43,9 @@ public class AccountService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhone(request.getPhone());
 
         User savedUser = userRepository.save(user);
         log.info("Account created for user: {}", savedUser.getUsername());
@@ -111,6 +109,9 @@ public class AccountService {
 
         user.setEmail(request.getEmail());
         user.setUsername(request.getUsername());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhone(request.getPhone());
 
         // Update addresses if provided
         if (request.getAddresses() != null && !request.getAddresses().isEmpty()) {
@@ -158,11 +159,76 @@ public class AccountService {
         return convertToResponse(refreshedUser);
     }
 
+    @Transactional
+    public AccountResponse addAddress(Long userId, Address address) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        address.setUser(user);
+        addressRepository.save(address);
+        
+        log.info("Address added for user: {}", user.getUsername());
+        
+        // Refresh user with latest data
+        User refreshedUser = userRepository.findById(userId).orElse(user);
+        return convertToResponse(refreshedUser);
+    }
+
+    @Transactional
+    public void deleteAddress(Long userId, Long addressId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new IllegalArgumentException("Address not found: " + addressId));
+
+        if (!address.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Address does not belong to this user");
+        }
+
+        addressRepository.delete(address);
+        log.info("Address deleted for user: {}", user.getUsername());
+    }
+
+    @Transactional
+    public AccountResponse addPaymentMethod(Long userId, PaymentMethod paymentMethod) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        paymentMethod.setUser(user);
+        paymentMethodRepository.save(paymentMethod);
+        
+        log.info("Payment method added for user: {}", user.getUsername());
+        
+        // Refresh user with latest data
+        User refreshedUser = userRepository.findById(userId).orElse(user);
+        return convertToResponse(refreshedUser);
+    }
+
+    @Transactional
+    public void deletePaymentMethod(Long userId, Long paymentMethodId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment method not found: " + paymentMethodId));
+
+        if (!paymentMethod.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Payment method does not belong to this user");
+        }
+
+        paymentMethodRepository.delete(paymentMethod);
+        log.info("Payment method deleted for user: {}", user.getUsername());
+    }
+
     private AccountResponse convertToResponse(User user) {
         AccountResponse response = new AccountResponse();
         response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setPhone(user.getPhone());
         response.setAddresses(user.getAddresses());
         response.setPaymentMethods(user.getPaymentMethods());
         response.setCreatedAt(user.getCreatedAt());

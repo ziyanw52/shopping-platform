@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { getOrders, confirmOrder, markPaid, completeOrder, cancelOrder, getToken } from '../services/api'
+import { getOrders, confirmOrder, markPaid, completeOrder, cancelOrder, refundPayment, getToken } from '../services/api'
 import { useNavigate } from 'react-router-dom'
 
 const STATUS_BADGE = {
+  CREATED: 'badge-yellow',
   PENDING: 'badge-yellow',
+  PENDING_PAYMENT: 'badge-yellow',
   CONFIRMED: 'badge-blue',
   COMPLETED: 'badge-green',
   CANCELLED: 'badge-red',
@@ -68,20 +70,32 @@ export default function Orders() {
                 <td>{o.quantity}</td>
                 <td><span className={`badge ${STATUS_BADGE[o.status] || 'badge-gray'}`}>{o.status}</span></td>
                 <td style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
+                  {o.status === 'CREATED' && (
+                    <>
+                      <button className="btn btn-success btn-sm" onClick={() => navigate(`/payment?orderId=${o.orderId}`)}>💰 Pay Now</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => doAction(cancelOrder, o.orderId, 'cancelled')}>Cancel</button>
+                    </>
+                  )}
                   {o.status === 'PENDING' && (
                     <>
-                      <button className="btn btn-primary btn-sm" onClick={() => doAction(confirmOrder, o.orderId, 'confirmed')}>Confirm</button>
+                      <button className="btn btn-success btn-sm" onClick={() => navigate(`/payment?orderId=${o.orderId}`)}>💰 Pay Now</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => doAction(cancelOrder, o.orderId, 'cancelled')}>Cancel</button>
+                    </>
+                  )}
+                  {o.status === 'PAYMENT_FAILED' && (
+                    <>
+                      <button className="btn btn-success btn-sm" onClick={() => navigate(`/payment?orderId=${o.orderId}`)}>🔄 Retry Payment</button>
                       <button className="btn btn-danger btn-sm" onClick={() => doAction(cancelOrder, o.orderId, 'cancelled')}>Cancel</button>
                     </>
                   )}
                   {o.status === 'CONFIRMED' && (
                     <>
-                      <button className="btn btn-success btn-sm" onClick={() => doAction(markPaid, o.orderId, 'paid')}>Mark Paid</button>
-                      <button className="btn btn-primary btn-sm" onClick={() => navigate(`/payment?orderId=${o.orderId}`)}>Pay Now</button>
+                      <button className="btn btn-success btn-sm" onClick={() => doAction(completeOrder, o.orderId, 'completed')}>📦 Mark Received</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => {
+                        const paymentId = prompt('Enter Payment ID to refund:')
+                        if (paymentId) doAction(refundPayment, paymentId, 'refunded')
+                      }}>💸 Refund</button>
                     </>
-                  )}
-                  {o.status === 'CONFIRMED' && (
-                    <button className="btn btn-success btn-sm" onClick={() => doAction(completeOrder, o.orderId, 'completed')}>Complete</button>
                   )}
                 </td>
               </tr>

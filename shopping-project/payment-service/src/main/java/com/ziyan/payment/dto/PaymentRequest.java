@@ -24,7 +24,7 @@ public class PaymentRequest {
     private Long orderId;
 
     @NotNull(message = "Amount cannot be null")
-    @DecimalMin(value = "0", message = "Amount must be greater than or equal to 0")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private BigDecimal amount;
 
     @NotBlank(message = "Currency cannot be blank")

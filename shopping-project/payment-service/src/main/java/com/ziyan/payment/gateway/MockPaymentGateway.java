@@ -18,15 +18,45 @@ public class MockPaymentGateway implements PaymentGateway {
             throw new PaymentException("Invalid payment amount");
         }
 
-        // Mock: Specific amount triggers decline (for testing failure scenarios)
-        if (payment.getAmount().compareTo(new BigDecimal("4242.42")) == 0) {
-            throw new PaymentException("Mock: Card declined - test failure amount");
+        // ===== MOCK FAILURE SCENARIOS FOR DEMO =====
+        
+        // Check if requestId contains mock failure trigger
+        String requestId = payment.getKey().getRequestId();
+        
+        if (requestId != null) {
+            if (requestId.contains("mock-card-declined") || requestId.contains("test-fail-card")) {
+                throw new PaymentException("MOCK FAILURE: Card declined - insufficient funds or card blocked");
+            }
+            if (requestId.contains("mock-insufficient-funds") || requestId.contains("test-fail-funds")) {
+                throw new PaymentException("MOCK FAILURE: Insufficient funds in account");
+            }
+            if (requestId.contains("mock-exceeds-limit") || requestId.contains("test-fail-limit")) {
+                throw new PaymentException("MOCK FAILURE: Transaction amount exceeds daily limit ($10,000)");
+            }
+        }
+        
+        // Legacy: Also support exact amount matching for backward compatibility
+        // Mock: Card Declined - amount 666.66
+        if (payment.getAmount().compareTo(new BigDecimal("666.66")) == 0) {
+            throw new PaymentException("MOCK FAILURE: Card declined - insufficient funds or card blocked");
         }
 
-        // Mock: Amount over $10,000 triggers error
-        if (payment.getAmount().compareTo(new BigDecimal("10000")) > 0) {
-            throw new PaymentException("Mock: Amount exceeds limit");
+        // Mock: Insufficient Funds - amount 999.99
+        if (payment.getAmount().compareTo(new BigDecimal("999.99")) == 0) {
+            throw new PaymentException("MOCK FAILURE: Insufficient funds in account");
         }
+
+        // Mock: Amount Exceeds Limit - amount >= 10000
+        if (payment.getAmount().compareTo(new BigDecimal("10000")) >= 0) {
+            throw new PaymentException("MOCK FAILURE: Transaction amount exceeds daily limit ($10,000)");
+        }
+
+        // Legacy test amount
+        if (payment.getAmount().compareTo(new BigDecimal("4242.42")) == 0) {
+            throw new PaymentException("MOCK FAILURE: Card declined - test failure amount");
+        }
+
+        // ===== END MOCK FAILURES =====
 
         // Simulate API call delay
         try {

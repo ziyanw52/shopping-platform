@@ -165,7 +165,7 @@ public class OrderService {
 
     // Get or create cart for user
     public CartResponse getOrCreateCart(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findFirstByUserId(userId)
                 .orElseGet(() -> {
                     Cart newCart = new Cart(userId);
                     return cartRepository.save(newCart);
@@ -175,14 +175,14 @@ public class OrderService {
 
     // Get cart by user ID
     public CartResponse getCart(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findFirstByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
         return convertCart(cart);
     }
 
     // Add item to cart
     public CartResponse addItemToCart(Long userId, AddToCartRequest request) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findFirstByUserId(userId)
                 .orElseGet(() -> {
                     Cart newCart = new Cart(userId);
                     return cartRepository.save(newCart);
@@ -214,7 +214,7 @@ public class OrderService {
 
     // Remove item from cart
     public CartResponse removeItemFromCart(Long userId, Long cartItemId) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findFirstByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
 
         CartItem itemToRemove = cart.getItems().stream()
@@ -230,7 +230,7 @@ public class OrderService {
 
     // Update item quantity in cart
     public CartResponse updateItemQuantity(Long userId, UpdateCartItemRequest request) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findFirstByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
 
         CartItem item = cart.getItems().stream()
@@ -250,7 +250,7 @@ public class OrderService {
 
     // Clear cart
     public void clearCart(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findFirstByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
 
         cart.clearCart();
@@ -259,7 +259,7 @@ public class OrderService {
 
     // Get cart total
     public Double getCartTotal(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findFirstByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
 
         return cart.getTotalPrice();
@@ -267,7 +267,7 @@ public class OrderService {
 
     // Get cart item count
     public Integer getCartItemCount(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findFirstByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
 
         return cart.getTotalQuantity();
@@ -275,7 +275,7 @@ public class OrderService {
 
     // Checkout - convert cart to order
     public OrderResponse checkout(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findFirstByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
 
         if (cart.getItems().isEmpty()) {

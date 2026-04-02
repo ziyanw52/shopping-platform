@@ -49,6 +49,24 @@ public class CassandraConfig {
                 "PRIMARY KEY ((payment_id), request_id)" +
                 ")");
 
+            // Create secondary index on request_id for idempotency lookups
+            try {
+                tempSession.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_request_id ON " + keyspaceName + ".payments (request_id)");
+                System.out.println("✓ Created index on request_id for idempotency");
+            } catch (Exception e) {
+                System.out.println("Index on request_id may already exist: " + e.getMessage());
+            }
+
+            // Create secondary index on order_id to prevent duplicate payments for same order
+            try {
+                tempSession.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_order_id ON " + keyspaceName + ".payments (order_id)");
+                System.out.println("✓ Created index on order_id to prevent duplicate order payments");
+            } catch (Exception e) {
+                System.out.println("Index on order_id may already exist: " + e.getMessage());
+            }
+
             System.out.println("✓ Cassandra keyspace '" + keyspaceName + "' and table 'payments' ready");
         }
 

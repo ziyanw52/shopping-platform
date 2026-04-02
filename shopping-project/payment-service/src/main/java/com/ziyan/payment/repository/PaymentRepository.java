@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface PaymentRepository extends CassandraRepository<Payment, PaymentKey> {
     Optional<Payment> findByKeyPaymentId(String paymentId);
+    Optional<Payment> findByKeyRequestId(String requestId);
+    Optional<Payment> findByOrderId(Long orderId);
 }

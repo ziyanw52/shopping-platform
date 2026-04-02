@@ -53,6 +53,7 @@ export const createItem = (data) => request(`${API.items}`, { method: 'POST', bo
 
 // Orders
 export const getOrders = () => request(`${API.orders}`);
+export const getOrder = (id) => request(`${API.orders}/${id}`);
 export const createOrder = (data) => request(`${API.orders}`, { method: 'POST', body: JSON.stringify(data) });
 export const confirmOrder = (id) => request(`${API.orders}/${id}/confirm`, { method: 'POST' });
 export const markPaid = (id) => request(`${API.orders}/${id}/paid`, { method: 'POST' });
@@ -67,5 +68,6 @@ export const checkout = (userId) => request(`${API.orders}/carts/${userId}/check
 // Payments
 export const createPayment = (data) => request(`${API.payments}`, { method: 'POST', body: JSON.stringify(data) });
 export const getPayment = (id) => request(`${API.payments}/${id}`);
+export const refundPayment = (paymentId) => request(`${API.payments}/${paymentId}/refund`, { method: 'POST' });
 
 export { getToken, setToken, clearToken, getUser, setUser };
